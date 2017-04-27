@@ -247,25 +247,49 @@ void signUp()
 }
 
 void selectCycle(int user_id,string location) {
+	cout<<"Cycle ID\tAvailable Time\tRent/hour\n" ;
+	int count =0 ;
 	for (int i=0 ; i<c.size() ; i++) {
-		if(c[i].get_cycle_location()==location && c[i].get_user().empty() && c[i].get_cycle_id()!=-1 && c[i].get_owner() != "Shop")
-			cout<<c[i].get_cycle_id()<<'\t'<<c[i].availableTime()<<'\t'<<rent_per_hour;
-		else if(c[i].get_cycle_location()==location && c[i].get_user().empty() && c[i].get_cycle_id()!=-1 && c[i].get_owner() == "Shop")
-			cout<<c[i].get_cycle_id()<<'\t'<<"24"<<'\t'<<rent_per_hour ;
+		if(c[i].get_cycle_location()==location && c[i].get_user().empty() && c[i].get_cycle_id()!=-1 && c[i].get_owner() != "Shop"){
+			cout<<c[i].get_cycle_id()<<"\t\t"<<c[i].availableTime()<<"\t\t"<<rent_per_hour<<endl;
+			count++;
+		}
+		else if(c[i].get_cycle_location()==location && c[i].get_user().empty() && c[i].get_cycle_id()!=-1 && c[i].get_owner() == "Shop"){
+			cout<<c[i].get_cycle_id()<<"\t\t"<<"24"<<"\t\t"<<rent_per_hour<<endl ;
+			count++;
+		}
 	}
-	int cycleid ;
-	cout<<"Enter the cycle id of the cycle which you want to take.\n" ;
-	cin>>cycleid ;
-	c[cycleid].set_time_taken();
-	c[cycleid].set_user(u[user_id].get_user_name());
-	cout<<"You have successfully rented the cycle with id "<<cycleid<<"\nKindly return it in "<<c[cycleid].availableTime()<<" hours"<<endl;
+	if(count==0){
+		cout<<"Currently there is no cycle available\n" ;
+	}
+	else{
+		int cycleid ;
+		cout<<"Enter the cycle id of the cycle which you want to take.\n" ;
+		cycleid =take_intInput();
+		if(cycleid<c.size()){
+			if(c[cycleid].get_cycle_location()==location && c[cycleid].get_user().empty() && c[cycleid].get_cycle_id()!=-1 ){
+				c[cycleid].set_time_taken();
+				c[cycleid].set_user(u[user_id].get_user_name());
+				cout<<"You have successfully rented the cycle with id "<<cycleid<<"\nKindly return it in "<<c[cycleid].availableTime()<<" hours"<<endl;
+			}
+			else{ 
+				cout << "Invalid cycle id !\n" ;
+				selectCycle(user_id,location);
+			}
+		}
+		else {
+			cout << "Invalid cycle id !\n" ;
+			selectCycle(user_id,location);
+			}
+
+	}
 }
 
 int rent_cycle(int user_id , string location) 
 {
 	int cycleOwnedId = u[user_id].get_cycleOwnedId() ;
 	bool blacklisted = u[user_id].get_isBlackListed() ;
-	bool yes ;
+	int yes ;
 	if( cycleOwnedId != -1 ){ 
 		if(c[cycleOwnedId].get_user().empty() && c[cycleOwnedId].get_cycle_location() == location){                  // if user id not owner then cycleOwnedId = -1
 			cout << "Your cycle is available you can take it.\n" ;
@@ -273,13 +297,17 @@ int rent_cycle(int user_id , string location)
 		}
 		else if(!blacklisted){
 			cout << "Your cycle is not available right now, but you can rent a cycle.\nWould you like to avail the services?\nEnter 1 if Yes and 0 if No.\n" ;
-			cin >> yes;
-			if(yes) {
+			yes = take_intInput();
+			if(yes==1) {
 				selectCycle(user_id,location);
 				return 0 ;
 			}
-			else
+			else if(yes==0)
 				return 0 ;
+			else{
+				cout<<"Invalid Entry ! Please enter a valid entry." ;
+				yes = take_intInput() ;
+			}
 		}
 		else
 			cout << "Your cycle is not available and you have been blacklisted because of large amount of unpaid payment.\nPlease pay the due amount if you want to avail the renting services.\n" ;
@@ -321,14 +349,17 @@ void update(int user_id, int cycle_id,string location)
 void return_cycle(int user_id,string location)
 {
 	int cycle_id = get_cycleIdOfUser(user_id);
+	string s ;
+	s.clear() ;
+	c[cycle_id].set_user(s) ;
 	if (u[user_id].get_cycleOwnedId() != -1)				//user == owner
 	{
 		if(u[user_id].get_cycleOwnedId() == cycle_id)
 		{
 			c[cycle_id].set_cycle_location(location);
 			int t;
-			cout<<"Please specify the time after which you need the cycle back.";
-			cin>>t;
+			cout<<"Please specify the time (in hours) after which you need the cycle back.";
+			t=take_intInput();
 			c[cycle_id].set_latestTimeByWhichCycleIsToBeReturned(t);
 		}
 		else
@@ -344,7 +375,7 @@ void add_cycle(int user_id)
 	string location=u[user_id].get_hostelNo();
 	cout<<"Enter latest time in hours by which the cycle is to be returned\n";
 	int latestTimeByWhichCycleIsToBeReturned;
-	cin >> latestTimeByWhichCycleIsToBeReturned;
+	latestTimeByWhichCycleIsToBeReturned = take_intInput();
 	int k=0;
 	for(int i=0;i<c.size();i++){
 		if(c[i].get_cycle_id()==-1){
@@ -353,7 +384,7 @@ void add_cycle(int user_id)
 			newCycle.set_latestTimeByWhichCycleIsToBeReturned(latestTimeByWhichCycleIsToBeReturned);
 			c[i]=newCycle;
 			k=1;
-			cout<<"Your cycle has been successfully add to the cycle rental portal. Your cycle ID is"<<i<<endl;
+			cout<<"Your cycle has been successfully add to the cycle rental portal.\n Your cycle ID is"<<i<<endl;
 			break;
 		}
 	}
@@ -372,6 +403,7 @@ void remove_cycle(int user_id)
 	int cycleOwnedId=u[user_id].get_cycleOwnedId();
 	c[cycleOwnedId].set_cycle_id(-1);
 	u[user_id].set_cycleOwnedId(-1);
+	cout<<"Your cycle has been removed from cycle rental portal.";
 }
 
 void donate_cycle(int user_id)
@@ -380,13 +412,14 @@ void donate_cycle(int user_id)
 	c[cycle_id].set_owner("Shop");
 	c[cycle_id].set_latestTimeByWhichCycleIsToBeReturned(24);
 	u[user_id].set_cycleOwnedId(-1);
+	cout<<"You have successfully donated your cycle. Thank you for your contribution.";
 }
 
 void updateTime(int user_id)
 {
 	cout<<"After how much time do you want your cycle back (No. of hours)\n";
 	int n;
-	cin>>n;
+	n=take_intInput();
 	c[u[user_id].get_cycleOwnedId()].set_latestTimeByWhichCycleIsToBeReturned(n);
 }
 
@@ -443,7 +476,7 @@ void signIn()
 	{
 		cout<<"1.Rent a cycle \n2.Return a cycle\n3.Add Cycle\n4.Remove Cycle\n5.Donate Cycle\n6.Update time\t(only for owners)\n7.Payment\n8.Sign Out\n";
 		int option;
-		cin>>option;
+		option = take_intInput();
 		if (option == 1)	//Rent
 		{
 			int num = rent_cycle(userid,hostelNo);
@@ -518,7 +551,7 @@ void signIn()
 			return;
 		}
 		else
-			return;
+			cout << "Invalid Entry ! Please enter a valid entry"<<endl<<endl;
 	}
 }
 /*int int_input()
@@ -557,9 +590,9 @@ int main()
 {
 	get_userData();
 	get_cycleData();
-	int n;
+	int n=10;
 	cout<<"Welcome to Cycle Shop \n Select an option \n Enter 1 to Sign-In \n Enter 2 to Sign-Up\n";
-	while(cin>>n)
+	while(n=take_intInput() )
 	{
 		
 		
@@ -578,6 +611,6 @@ int main()
 		}
 		//get_user_input();
 		cout<<"Welcome to Cycle Shop \n Select an option \n Enter 1 to Sign-In \n Enter 2 to Sign-Up\n";
-		int n;
+		int n=10;
 	}
 }
