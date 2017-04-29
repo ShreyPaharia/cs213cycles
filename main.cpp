@@ -11,8 +11,8 @@
 //#include "users.h"
 #include "users.cpp"
 
-using namespace std;
 
+using namespace std;
 vector<users> u;
 vector<cycles> c;
 
@@ -184,6 +184,9 @@ void set_userData(vector<users> u) {
 	}
 	userfile.close() ;
 }
+
+
+
 int take_intInput(){
 	int int_entry ;
 	cin>>int_entry;
